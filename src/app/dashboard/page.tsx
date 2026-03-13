@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { Search, ChevronRight, Play, Heart, Users, Pause } from 'lucide-react';
+import { Search, ChevronRight, Play, Heart, Users, Pause, Loader2 } from 'lucide-react';
 import { useAudioStore, type Track } from '@/lib/audioStore';
 import { apiGetTracks, apiGetCommunities } from '@/lib/api';
 import { motion } from 'framer-motion';
@@ -162,10 +162,32 @@ function CommunityCard({ title, description, members, icon: Icon }: { title: str
 
 export default function Dashboard() {
   const [tracks, setTracks] = useState<Track[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [communities, setCommunities] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [voidLore, setVoidLore] = useState<string | null>(null);
+  const [isLoreLoading, setIsLoreLoading] = useState(false);
+
+  const fetchLore = async (track: Track) => {
+    setIsLoreLoading(true);
+    try {
+      const res = await fetch('/api/lore', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          trackTitle: track.title, 
+          artist: track.artist,
+          type: 'track'
+        })
+      });
+      const data = await res.json();
+      setVoidLore(data.lore);
+    } catch (err) {
+      console.error('Lore failure', err);
+    } finally {
+      setIsLoreLoading(false);
+    }
+  };
 
   useEffect(() => {
     async function loadData() {
@@ -185,14 +207,6 @@ export default function Dashboard() {
     loadData();
   }, []);
 
-  if (isLoading) {
-    return (
-      <div className="flex-1 overflow-y-auto scroll-smooth h-full flex items-center justify-center bg-void-bg">
-        <div className="w-12 h-12 rounded-full border-4 border-crimson/20 border-t-crimson animate-spin"></div>
-      </div>
-    );
-  }
-
   const filteredTracks = tracks.filter(t => 
     t.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
     t.artist.toLowerCase().includes(searchQuery.toLowerCase())
@@ -202,6 +216,21 @@ export default function Dashboard() {
     c.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
     c.description?.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  useEffect(() => {
+    if (filteredTracks.length > 0 && !voidLore && !isLoreLoading) {
+      fetchLore(filteredTracks[0]);
+    }
+  }, [filteredTracks, voidLore, isLoreLoading]);
+
+  if (isLoading) {
+    return (
+      <div className="flex-1 overflow-y-auto scroll-smooth h-full flex items-center justify-center bg-void-bg">
+        <div className="w-12 h-12 rounded-full border-4 border-crimson/20 border-t-crimson animate-spin"></div>
+      </div>
+    );
+  }
+
 
   return (
     <div className="flex-1 overflow-y-auto scroll-smooth h-full custom-scrollbar">
@@ -227,6 +256,34 @@ export default function Dashboard() {
 
       <div className="max-w-5xl mx-auto px-8 py-10 space-y-12 pb-32">
         {filteredTracks.length > 0 && <HeroBanner track={filteredTracks[0]} />}
+
+        {/* Void Whispers (AI Lore) */}
+        {(voidLore || isLoreLoading) && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="relative p-6 rounded-3xl bg-crimson/5 border border-crimson/10 overflow-hidden group"
+          >
+            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+              <Users size={40} className="text-crimson" />
+            </div>
+            <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-crimson mb-3 flex items-center gap-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-crimson animate-pulse" />
+              Void Whispers
+            </h4>
+            {isLoreLoading ? (
+              <div className="flex items-center gap-3 text-moonlit/20 italic text-sm py-2">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Channeling the abyss...
+              </div>
+            ) : (
+              <p className="text-sm md:text-base text-moonlit/70 leading-relaxed font-serif italic max-w-2xl">
+                "{voidLore}"
+              </p>
+            )}
+            <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-crimson/5 rounded-full blur-3xl" />
+          </motion.div>
+        )}
 
         {filteredTracks.length > 0 && (
           <Section 
