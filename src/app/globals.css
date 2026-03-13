@@ -1,0 +1,256 @@
+@import "tailwindcss";
+
+@theme {
+  /* Lal Divane - Crimson Void Palette */
+  --color-void-bg: #080608;
+  --color-void-900: #0e0a10;
+  --color-void-800: #160f18;
+  --color-void-700: #1e1520;
+  --color-void-600: #2a1f2d;
+  --color-void-border: rgba(200, 16, 46, 0.08);
+
+  --color-crimson: #c8102e;
+  --color-blood: #8b0000;
+  --color-ember: #ff2d2d;
+  --color-moonlit: #e8ddd3;
+  --color-kohl: #d4a574;
+
+  --color-accent-purple: #6b2fa0;
+  --color-accent-crimson: #c8102e;
+  --color-accent-ember: #ff4444;
+
+  --font-sans: 'DM Sans', sans-serif;
+  --font-display: 'Space Grotesk', sans-serif;
+}
+
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    background-color: var(--color-void-bg);
+    color: var(--color-moonlit);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+}
+
+/* Custom scrollbar — crimson */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.3);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(200, 16, 46, 0.4);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(200, 16, 46, 0.7);
+}
+
+/* Glow effects — crimson family */
+.glow-crimson {
+  box-shadow: 0 0 20px rgba(200, 16, 46, 0.5), 0 0 40px rgba(200, 16, 46, 0.2);
+}
+.glow-ember {
+  box-shadow: 0 0 15px rgba(255, 45, 45, 0.4), 0 0 30px rgba(255, 45, 45, 0.15);
+}
+.glow-void {
+  box-shadow: 0 0 30px rgba(107, 47, 160, 0.3), 0 0 60px rgba(107, 47, 160, 0.1);
+}
+
+/* Glass Effect — darker, more void, better depth */
+.glass {
+  background: rgba(14, 10, 16, 0.75);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+}
+
+.glass-crimson {
+  background: rgba(200, 16, 46, 0.05);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(200, 16, 46, 0.1);
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, #c8102e 0%, #ff4444 50%, #8b0000 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-text-moonlit {
+  background: linear-gradient(135deg, #e8ddd3 0%, #d4a574 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Hover Lift */
+.hover-lift {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 30px rgba(200, 16, 46, 0.2);
+}
+
+/* Nav Item — crimson */
+.nav-item {
+  position: relative;
+  transition: all 0.3s ease;
+}
+.nav-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 0;
+  background: linear-gradient(180deg, #c8102e, #8b0000);
+  border-radius: 0 3px 3px 0;
+  transition: height 0.3s ease;
+}
+.nav-item.active::before {
+  height: 60%;
+}
+.nav-item:hover {
+  background: rgba(200, 16, 46, 0.08);
+}
+
+/* Community Card — void hover */
+.community-card {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.community-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(200, 16, 46, 0.15), rgba(107, 47, 160, 0.1));
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  z-index: 1;
+  pointer-events: none;
+}
+.community-card:hover::before {
+  opacity: 1;
+}
+.community-card:hover {
+  transform: scale(1.02);
+  box-shadow: 0 10px 40px rgba(200, 16, 46, 0.25);
+}
+
+/* Pulse Glow — crimson heartbeat */
+.pulse-glow {
+  animation: pulse-glow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(200, 16, 46, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 45px rgba(200, 16, 46, 0.6), 0 0 10px rgba(200, 16, 46, 0.4);
+  }
+}
+
+/* Shimmer effect for loaders and cards */
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(200, 16, 46, 0.05) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Floating animation */
+.float {
+  animation: float 6s ease-in-out infinite;
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+/* Crimson Border Glow */
+.crimson-border-glow {
+  border: 1px solid rgba(200, 16, 46, 0.2);
+  transition: all 0.3s ease;
+}
+.crimson-border-glow:hover {
+  border-color: rgba(200, 16, 46, 0.6);
+  box-shadow: 0 0 15px rgba(200, 16, 46, 0.3);
+}
+
+/* Text Shadow for display */
+.text-shadow-crimson {
+  text-shadow: 0 0 10px rgba(200, 16, 46, 0.5);
+}
+
+/* Profile Avatar */
+.profile-avatar {
+  position: relative;
+}
+.profile-avatar::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 12px;
+  height: 12px;
+  background: #c8102e;
+  border: 2px solid #0e0a10;
+  border-radius: 50%;
+}
+
+/* Now Listening indicator */
+.now-listening::after {
+  background: #ff2d2d;
+  animation: pulse-glow 1.5s ease infinite;
+}
+
+/* Search Input */
+.search-input {
+  transition: all 0.3s ease;
+}
+.search-input:focus {
+  background: rgba(200, 16, 46, 0.06);
+  box-shadow: 0 0 0 2px rgba(200, 16, 46, 0.3);
+}
+
+/* Audio bar animation */
+@keyframes audio-bar {
+  0%, 100% { height: 20%; }
+  50% { height: 80%; }
+}
+
+/* Smoke / whisper animation for decorative elements */
+@keyframes smoke-drift {
+  0% { opacity: 0.3; transform: translateY(0) scale(1); }
+  50% { opacity: 0.6; transform: translateY(-8px) scale(1.05); }
+  100% { opacity: 0.3; transform: translateY(0) scale(1); }
+}
+.smoke-drift {
+  animation: smoke-drift 4s ease-in-out infinite;
+}
