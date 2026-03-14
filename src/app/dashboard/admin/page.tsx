@@ -5,13 +5,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Plus, Disc, Music, AlertCircle, CheckCircle2, 
   Loader2, ArrowLeft, Archive, Edit3, Trash2, 
-  Search, X, Users, MessageSquare, Shield, Globe
+  Search, X, Users, MessageSquare, Shield, Globe, Star
 } from 'lucide-react';
 import { 
   apiCreateAlbum, apiCreateTrack, apiGetAlbums, apiGetTracks,
   apiUpdateAlbum, apiDeleteAlbum, apiUpdateTrack, apiDeleteTrack,
   apiGetCommunities, apiCreateCommunity, apiUpdateCommunity, apiDeleteCommunity,
-  apiGetAllPosts, apiAdminDeletePost
+  apiGetAllPosts, apiAdminDeletePost, apiSetFeatured
 } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
@@ -172,6 +172,16 @@ export default function AdminPage() {
     }
   };
 
+  const handleSetFeatured = async (type: 'track' | 'album', id: number) => {
+    try {
+      await apiSetFeatured(type, id);
+      setStatus({ type: 'success', message: 'Spotlight shifted. The void chooses its new focus.' });
+      loadInitialData();
+    } catch (err: any) {
+      setStatus({ type: 'error', message: err.message || 'Focus shift failed.' });
+    }
+  };
+
   const handleDelete = async (type: 'album' | 'track' | 'community' | 'post', id: number) => {
     if (!confirm('Are you sure you want to banish this from reality?')) return;
     try {
@@ -214,7 +224,7 @@ export default function AdminPage() {
 
   if (authLoading || !isAdmin) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-void-bg">
+      <div className="flex-1 flex items-center justify-center bg-void-bg overflow-hidden h-full">
         <Loader2 className="w-10 h-10 text-crimson animate-spin" />
       </div>
     );
@@ -247,7 +257,7 @@ export default function AdminPage() {
         </header>
 
         {/* Universal Tabs */}
-        <div className="flex flex-wrap gap-2 mb-10 p-1.5 bg-white/5 rounded-2xl w-fit">
+        <div className="flex flex-wrap gap-2 mb-10 p-1.5 bg-white/5 rounded-2xl w-fit relative z-20">
           <button
             onClick={() => { setActiveTab('releases'); setEditingItem(null); setStatus(null); }}
             className={`px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-widest transition-all flex items-center gap-3 ${activeTab === 'releases' ? 'bg-crimson text-white shadow-lg glow-crimson' : 'text-moonlit/40 hover:text-white'}`}
@@ -278,7 +288,7 @@ export default function AdminPage() {
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="mb-8 flex items-center justify-between bg-crimson/10 border border-crimson/30 p-5 rounded-2xl backdrop-blur-md"
+            className="mb-8 flex items-center justify-between bg-crimson/10 border border-crimson/30 p-5 rounded-2xl backdrop-blur-md relative z-10"
           >
             <div className="flex items-center gap-4">
               <div className="w-10 h-10 rounded-full bg-crimson flex items-center justify-center shadow-lg glow-crimson">
@@ -307,7 +317,7 @@ export default function AdminPage() {
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            className={`mb-8 p-5 rounded-2xl flex items-center gap-4 border ${status.type === 'success' ? 'bg-green-500/5 border-green-500/20 text-green-400' : 'bg-crimson/5 border-crimson/20 text-crimson'}`}
+            className={`mb-8 p-5 rounded-2xl flex items-center gap-4 border relative z-10 ${status.type === 'success' ? 'bg-green-500/5 border-green-500/20 text-green-400' : 'bg-crimson/5 border-crimson/20 text-crimson'}`}
           >
             <div className={`p-2 rounded-lg ${status.type === 'success' ? 'bg-green-500/10' : 'bg-crimson/10'}`}>
               {status.type === 'success' ? <CheckCircle2 size={24} /> : <AlertCircle size={24} />}
@@ -316,9 +326,9 @@ export default function AdminPage() {
           </motion.div>
         )}
 
-        <div className="glass rounded-[2rem] border border-void-border/50 p-8 md:p-12 relative overflow-hidden min-h-[500px] shadow-2xl">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-crimson/5 rounded-full blur-[120px] -mr-48 -mt-48" />
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-crimson/5 rounded-full blur-[100px] -ml-32 -mb-32" />
+        <div className="glass rounded-4xl border border-void-border/50 p-8 md:p-12 relative overflow-hidden min-h-[500px] shadow-2xl">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-crimson/5 rounded-full blur-[120px] -mr-48 -mt-48 pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-crimson/5 rounded-full blur-[100px] -ml-32 -mb-32 pointer-events-none" />
           
           {/* RELEASES TAB */}
           {activeTab === 'releases' && (
@@ -356,7 +366,7 @@ export default function AdminPage() {
                       className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-3.5 text-xs font-mono focus:outline-none focus:border-crimson/50 transition-all"
                     />
                   </div>
-                  <button type="submit" disabled={isSubmitting} className="w-full bg-crimson hover:bg-ember text-white py-4 rounded-2xl font-black uppercase text-xs tracking-[0.3em] transition-all shadow-xl glow-crimson flex items-center justify-center gap-3">
+                  <button type="submit" disabled={isSubmitting} className="w-full bg-crimson hover:bg-ember text-white py-4 rounded-2xl font-black uppercase text-xs tracking-[0.3em] transition-all shadow-xl glow-crimson flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50">
                     {isSubmitting ? <Loader2 className="animate-spin" /> : <Plus size={16} />}
                     {editingItem?.type === 'album' ? 'Update' : 'Manifest'}
                   </button>
@@ -384,10 +394,10 @@ export default function AdminPage() {
                       <select
                         value={trackForm.album_id}
                         onChange={(e) => setTrackForm({...trackForm, album_id: e.target.value})}
-                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3.5 text-xs focus:outline-none focus:border-crimson/50 transition-all"
+                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3.5 text-xs focus:outline-none focus:border-crimson/50 transition-all appearance-none"
                       >
                         <option value="">None (Single)</option>
-                        {albums.map(a => <option key={a.id} value={a.id}>{a.title}</option>)}
+                        {albums.map(a => <option key={a.id} value={a.id} className="bg-void-bg">{a.title}</option>)}
                       </select>
                     </div>
                     <div className="space-y-1.5">
@@ -407,7 +417,7 @@ export default function AdminPage() {
                       className="w-full bg-white/5 border border-crimson/10 rounded-2xl px-5 py-3.5 text-xs font-mono focus:outline-none focus:border-crimson/50 transition-all"
                     />
                   </div>
-                  <button type="submit" disabled={isSubmitting} className="w-full border-2 border-crimson/50 hover:bg-crimson text-white py-4 rounded-2xl font-black uppercase text-xs tracking-[0.3em] transition-all flex items-center justify-center gap-3">
+                  <button type="submit" disabled={isSubmitting} className="w-full border-2 border-crimson/50 hover:bg-crimson text-white py-4 rounded-2xl font-black uppercase text-xs tracking-[0.3em] transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50">
                     {isSubmitting ? <Loader2 className="animate-spin" /> : <Plus size={16} />}
                     {editingItem?.type === 'track' ? 'Update' : 'Echo'}
                   </button>
@@ -424,7 +434,7 @@ export default function AdminPage() {
                 <input 
                   type="text" placeholder="Search the void archives..." value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-[2rem] pl-14 pr-6 py-5 text-sm font-medium focus:outline-none focus:border-crimson/30 transition-all"
+                  className="w-full bg-white/5 border border-white/10 rounded-4xl pl-14 pr-6 py-5 text-sm font-medium focus:outline-none focus:border-crimson/30 transition-all"
                 />
               </div>
 
@@ -445,15 +455,22 @@ export default function AdminPage() {
                     </header>
                     <div className="space-y-3 custom-scrollbar max-h-[600px] overflow-y-auto pr-2">
                       {filteredAlbums.map(album => (
-                        <div key={album.id} className="group glass p-4 rounded-3xl border border-white/5 flex items-center gap-5 hover:bg-white/[0.03] transition-all">
+                        <div key={album.id} className="group glass p-4 rounded-3xl border border-white/5 flex items-center gap-5 hover:bg-white/3 transition-all relative">
                           <img src={album.cover_url} className="w-14 h-14 rounded-xl object-cover shadow-2xl group-hover:scale-105 transition-transform" alt="" />
                           <div className="flex-1 min-w-0">
                             <h5 className="font-bold text-sm truncate">{album.title}</h5>
                             <p className="text-[10px] text-moonlit/30 uppercase tracking-[0.2em] mt-0.5">{album.artist} • {new Date(album.release_date).getFullYear()}</p>
                           </div>
-                          <div className="flex gap-2">
-                            <button onClick={() => startEdit('album', album)} className="p-3 rounded-xl bg-white/5 hover:bg-crimson/10 text-moonlit/20 hover:text-crimson transition-all"><Edit3 size={16}/></button>
-                            <button onClick={() => handleDelete('album', album.id)} className="p-3 rounded-xl bg-white/5 hover:bg-crimson/10 text-moonlit/20 hover:text-crimson transition-all"><Trash2 size={16}/></button>
+                          <div className="flex gap-1.5 relative z-10">
+                            <button 
+                              onClick={() => handleSetFeatured('album', album.id)} 
+                              className={`p-2.5 rounded-xl transition-all ${album.is_featured ? 'bg-crimson text-white shadow-lg glow-crimson' : 'bg-white/5 text-moonlit/20 hover:text-crimson'}`}
+                              title={album.is_featured ? "Featured Content" : "Pin to Hero"}
+                            >
+                              <Star size={16} fill={album.is_featured ? "currentColor" : "none"} />
+                            </button>
+                            <button onClick={() => startEdit('album', album)} className="p-2.5 rounded-xl bg-white/5 hover:bg-crimson/10 text-moonlit/20 hover:text-crimson transition-all"><Edit3 size={16}/></button>
+                            <button onClick={() => handleDelete('album', album.id)} className="p-2.5 rounded-xl bg-white/5 hover:bg-crimson/10 text-moonlit/20 hover:text-crimson transition-all"><Trash2 size={16}/></button>
                           </div>
                         </div>
                       ))}
@@ -470,15 +487,22 @@ export default function AdminPage() {
                     </header>
                     <div className="space-y-3 custom-scrollbar max-h-[600px] overflow-y-auto pr-2">
                       {filteredTracks.map(track => (
-                        <div key={track.id} className="group glass p-4 rounded-3xl border border-white/5 flex items-center gap-5 hover:bg-white/[0.03] transition-all">
+                        <div key={track.id} className="group glass p-4 rounded-3xl border border-white/5 flex items-center gap-5 hover:bg-white/3 transition-all relative">
                           <img src={track.cover_url} className="w-14 h-14 rounded-xl object-cover shadow-2xl group-hover:scale-105 transition-transform" alt="" />
                           <div className="flex-1 min-w-0">
                             <h5 className="font-bold text-sm truncate">{track.title}</h5>
                             <p className="text-[10px] text-moonlit/30 uppercase tracking-[0.2em] mt-0.5">{track.artist} • {Math.floor(track.duration_seconds/60)}:{String(track.duration_seconds%60).padStart(2,'0')}</p>
                           </div>
-                          <div className="flex gap-2">
-                            <button onClick={() => startEdit('track', track)} className="p-3 rounded-xl bg-white/5 hover:bg-crimson/10 text-moonlit/20 hover:text-crimson transition-all"><Edit3 size={16}/></button>
-                            <button onClick={() => handleDelete('track', track.id)} className="p-3 rounded-xl bg-white/5 hover:bg-crimson/10 text-moonlit/20 hover:text-crimson transition-all"><Trash2 size={16}/></button>
+                          <div className="flex gap-1.5 relative z-10">
+                            <button 
+                              onClick={() => handleSetFeatured('track', track.id)} 
+                              className={`p-2.5 rounded-xl transition-all ${track.is_featured ? 'bg-crimson text-white shadow-lg glow-crimson' : 'bg-white/5 text-moonlit/20 hover:text-crimson'}`}
+                              title={track.is_featured ? "Featured Content" : "Pin to Hero"}
+                            >
+                              <Star size={16} fill={track.is_featured ? "currentColor" : "none"} />
+                            </button>
+                            <button onClick={() => startEdit('track', track)} className="p-2.5 rounded-xl bg-white/5 hover:bg-crimson/10 text-moonlit/20 hover:text-crimson transition-all"><Edit3 size={16}/></button>
+                            <button onClick={() => handleDelete('track', track.id)} className="p-2.5 rounded-xl bg-white/5 hover:bg-crimson/10 text-moonlit/20 hover:text-crimson transition-all"><Trash2 size={16}/></button>
                           </div>
                         </div>
                       ))}
@@ -512,7 +536,7 @@ export default function AdminPage() {
                       type="text" required value={communityForm.slug}
                       onChange={(e) => setCommunityForm({...communityForm, slug: e.target.value.toLowerCase().replace(/ /g, '-')})}
                       placeholder="e.g. dark-lore"
-                      className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-3.5 text-xs font-mono focus:outline-none focus:border-crimson/50 transition-all"
+                      className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-3.5 text-xs font-mono focus:outline-none focus:border-crimson/50 transition-all font-medium"
                     />
                   </div>
                   <div className="space-y-1.5">
@@ -523,7 +547,7 @@ export default function AdminPage() {
                       className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-3.5 text-sm focus:outline-none focus:border-crimson/50 transition-all min-h-[100px] resize-none"
                     />
                   </div>
-                  <button type="submit" disabled={isSubmitting} className="w-full bg-white text-void-bg py-4 rounded-2xl font-black uppercase text-xs tracking-[0.3em] transition-all hover:bg-crimson hover:text-white glow-white/10 flex items-center justify-center gap-3">
+                  <button type="submit" disabled={isSubmitting} className="w-full bg-white text-void-bg py-4 rounded-2xl font-black uppercase text-xs tracking-[0.3em] transition-all hover:bg-crimson hover:text-white glow-white/10 flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50">
                     {isSubmitting ? <Loader2 className="animate-spin" /> : <Plus size={16} />}
                     {editingItem ? 'Update Layer' : 'Manifest Space'}
                   </button>
@@ -537,11 +561,11 @@ export default function AdminPage() {
                 </header>
                 <div className="space-y-3 custom-scrollbar max-h-[600px] overflow-y-auto pr-2">
                   {communities.map(c => (
-                    <div key={c.id} className="group glass p-5 rounded-3xl border border-white/5 flex items-center gap-5 hover:bg-white/[0.03] transition-all">
+                    <div key={c.id} className="group glass p-5 rounded-3xl border border-white/5 flex items-center gap-5 hover:bg-white/3 transition-all relative">
                       <div className="w-12 h-12 rounded-xl bg-crimson/10 flex items-center justify-center text-crimson"><Users size={20}/></div>
                       <div className="flex-1 min-w-0">
                         <h5 className="font-bold text-sm truncate">{c.name}</h5>
-                        <p className="text-[10px] text-moonlit/30 uppercase tracking-[0.1em] mt-0.5">/{c.slug}</p>
+                        <p className="text-[10px] text-moonlit/30 uppercase tracking-widest mt-0.5">/{c.slug}</p>
                       </div>
                       <div className="flex gap-2">
                         <button onClick={() => startEdit('community', c)} className="p-3 rounded-xl bg-white/5 hover:bg-crimson/10 text-moonlit/20 hover:text-crimson transition-all"><Edit3 size={16}/></button>
@@ -570,8 +594,8 @@ export default function AdminPage() {
               ) : (
                 <div className="grid grid-cols-1 gap-4">
                   {allPosts.map(post => (
-                    <div key={post.id} className="glass p-6 rounded-[2rem] border border-white/5 flex items-start gap-6 hover:bg-white/[0.02] transition-colors group">
-                      <div className="w-12 h-12 rounded-full bg-crimson/10 flex items-center justify-center flex-shrink-0 text-crimson/40">
+                    <div key={post.id} className="glass p-6 rounded-4xl border border-white/5 flex items-start gap-6 hover:bg-white/2 transition-colors group">
+                      <div className="w-12 h-12 rounded-full bg-crimson/10 flex items-center justify-center shrink-0 text-crimson/40">
                         <MessageSquare size={20} />
                       </div>
                       <div className="flex-1">
@@ -583,7 +607,7 @@ export default function AdminPage() {
                           </div>
                           <button 
                             onClick={() => handleDelete('post', post.id)}
-                            className="p-3 bg-crimson/5 hover:bg-crimson text-crimson hover:text-white rounded-2xl transition-all shadow-lg glow-crimson/10"
+                            className="p-3 bg-crimson/5 hover:bg-crimson text-crimson hover:text-white rounded-2xl transition-all shadow-lg glow-crimson/10 active:scale-95"
                             title="Banish Post"
                           >
                             <Trash2 size={16} />

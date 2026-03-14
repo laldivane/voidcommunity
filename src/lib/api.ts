@@ -280,6 +280,7 @@ export async function apiUpdateAlbum(id: number, album: Partial<{
   description: string;
   cover_url: string;
   release_date: string;
+  is_featured?: boolean;
 }>) {
   const { data, error } = await supabase
     .from('albums')
@@ -307,6 +308,7 @@ export async function apiUpdateTrack(id: number, track: Partial<{
   duration_seconds: number;
   audio_url: string;
   cover_url: string;
+  is_featured?: boolean;
 }>) {
   const { data, error } = await supabase
     .from('tracks')
@@ -325,4 +327,34 @@ export async function apiDeleteTrack(id: number) {
     .eq('id', id);
   if (error) throw error;
   return { success: true };
+}
+
+export async function apiSetFeatured(type: 'track' | 'album', id: number) {
+  const table = type === 'track' ? 'tracks' : 'albums';
+  
+  // Unset all others globally to ensure 1 hero
+  await Promise.all([
+    supabase.from('tracks').update({ is_featured: false }),
+    supabase.from('albums').update({ is_featured: false })
+  ]);
+
+  const { data, error } = await supabase
+    .from(table)
+    .update({ is_featured: true })
+    .eq('id', id)
+    .select()
+    .maybeSingle();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function apiGetFeaturedContent() {
+  const { data: track } = await supabase.from('tracks').select('*').eq('is_featured', true).maybeSingle();
+  if (track) return { type: 'track', data: track };
+  
+  const { data: album } = await supabase.from('albums').select('*').eq('is_featured', true).maybeSingle();
+  if (album) return { type: 'album', data: album };
+  
+  return null;
 }

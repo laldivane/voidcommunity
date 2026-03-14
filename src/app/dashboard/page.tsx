@@ -3,35 +3,29 @@
 import { useEffect, useState } from 'react';
 import { Search, ChevronRight, Play, Heart, Users, Pause, Loader2 } from 'lucide-react';
 import { useAudioStore, type Track } from '@/lib/audioStore';
-import { apiGetTracks, apiGetCommunities } from '@/lib/api';
-import { motion } from 'framer-motion';
+import { apiGetTracks, apiGetCommunities, apiGetFeaturedContent } from '@/lib/api';
+import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 
 // Section wrapper
-function Section({ title, children, href, delay = 0 }: { title: string; children: React.ReactNode, href?: string, delay?: number }) {
+function Section({ title, children, href }: { title: string, children: React.ReactNode, href?: string }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.6, delay, ease: "easeOut" }}
-    >
-      <div className="flex items-center justify-between mb-5">
-        <h3 className="text-xl font-bold font-display text-moonlit tracking-tight">{title}</h3>
+    <section className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-sm font-black uppercase tracking-[0.4em] text-crimson decoration-crimson decoration-2">{title}</h2>
         {href && (
-          <Link href={href} className="text-xs uppercase tracking-widest text-crimson font-bold hover:text-ember transition-colors flex items-center gap-1 group">
-            See All
-            <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
+          <Link href={href} className="text-[10px] font-bold uppercase tracking-widest text-moonlit/20 hover:text-crimson transition-colors flex items-center gap-1 group">
+            See All <ChevronRight size={12} className="group-hover:translate-x-1 transition-transform" />
           </Link>
         )}
       </div>
       {children}
-    </motion.div>
+    </section>
   );
 }
 
 // Hero Banner
-function HeroBanner({ track }: { track: Track | null }) {
+function HeroBanner({ track, type }: { track: Track | null, type?: string }) {
   const { playTrack, currentTrack, isPlaying } = useAudioStore();
 
   if (!track) return null;
@@ -40,43 +34,54 @@ function HeroBanner({ track }: { track: Track | null }) {
 
   return (
     <motion.div 
-      initial={{ opacity: 0, scale: 0.95 }}
+      initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.8, ease: "easeOut" }}
-      className="relative h-64 md:h-80 rounded-3xl overflow-hidden glass crimson-border-glow cursor-pointer group"
+      className="relative group h-[400px] md:h-[500px] rounded-[3rem] overflow-hidden border border-white/5 shadow-2xl glow-crimson/5"
     >
-      <div className="absolute inset-0 bg-linear-to-r from-crimson/80 via-blood/60 to-void-900 opacity-90 z-10 transition-opacity duration-700 group-hover:opacity-100"></div>
-      
+      {/* Background with parallax effect */}
       <div className="absolute inset-0 flex overflow-hidden">
         <div className="w-1/2 h-full">
           <img
-            src="/lal-divane-avatar.png"
-            alt="Lal Divane"
+            src={type === 'community' ? "/community-banner.png" : "/lal-divane-avatar.png"}
+            alt={type === 'community' ? "Community Banner" : "Lal Divane"}
             className="w-full h-full object-cover opacity-40 group-hover:opacity-60 group-hover:scale-110 transition-all duration-1000"
           />
         </div>
-        <div className="w-1/2 h-full bg-linear-to-l from-transparent to-void-900/80"></div>
+        <div className="w-1/2 h-full bg-void-bg" />
+        <div className="absolute inset-0 bg-gradient-to-r from-void-bg via-void-bg/60 to-transparent" />
       </div>
-      
-      <div className="absolute inset-0 bg-linear-to-t from-void-900 via-transparent to-transparent z-10"></div>
-      
-      <div className="relative h-full flex flex-col justify-end p-8 md:p-12 z-20">
+
+      {/* Content */}
+      <div className="absolute inset-0 flex flex-col justify-center px-10 md:px-20 z-10">
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.3, duration: 0.6 }}
         >
-          <p className="text-[10px] md:text-xs uppercase tracking-[0.4em] text-white/60 mb-3 font-display font-medium">New Spiritual Awakening</p>
+          <p className="text-[10px] md:text-xs uppercase tracking-[0.4em] text-white/60 mb-3 font-display font-medium">
+            {type === 'community' ? "Featured Community" : "New Spiritual Awakening"}
+          </p>
           <h2 className="text-3xl md:text-5xl font-bold mb-2 font-display text-moonlit text-shadow-crimson leading-tight">
-            {track.title}
+            {type === 'community' ? (track as any).name : track.title}
           </h2>
-          <p className="text-sm md:text-base text-moonlit/60 mb-6 max-w-sm italic">"The echo of a thousand silent screams turned into melody."</p>
+          <p className="text-sm md:text-base text-moonlit/60 mb-6 max-w-sm italic">
+            {type === 'community' ? (track as any).description : `"The echo of a thousand silent screams turned into melody."`}
+          </p>
           <button 
             onClick={() => playTrack(track)}
             className="flex items-center gap-3 bg-moonlit text-void-bg hover:bg-white px-8 py-3.5 rounded-full text-sm font-bold transition-all hover:scale-105 active:scale-95 glow-crimson"
           >
-            {isCurrentPlaying ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" />}
-            {isCurrentPlaying ? "Listening to the Void" : "Open Your Soul"}
+            {type === 'community' ? (
+              <>
+                <Users size={18} fill="currentColor" />
+                Join the Collective
+              </>
+            ) : (
+              <>
+                {isCurrentPlaying ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" />}
+                {isCurrentPlaying ? "Listening to the Void" : "Open Your Soul"}
+              </>
+            )}
           </button>
         </motion.div>
       </div>
@@ -84,79 +89,48 @@ function HeroBanner({ track }: { track: Track | null }) {
   );
 }
 
-// Track Card
-function TrackCard({ track, listeners, gradient }: { track: Track; listeners: string; gradient: string }) {
+// Compact Track Card
+function TrackCard({ track, onLoreClick }: { track: Track, onLoreClick: (track: Track) => void }) {
   const { playTrack, currentTrack, isPlaying } = useAudioStore();
   const isCurrentPlaying = currentTrack?.id === track.id && isPlaying;
 
-  const formatTime = (seconds: number) => {
-    const m = Math.floor(seconds / 60);
-    const s = Math.floor(seconds % 60);
-    return `${m}:${s.toString().padStart(2, '0')}`;
-  };
-
   return (
-    <motion.div 
-      whileHover={{ y: -8 }}
-      onClick={() => playTrack(track)}
-      className={`relative group glass ${isCurrentPlaying ? 'border-crimson/50 shadow-[0_0_20px_rgba(200,16,46,0.15)]' : 'border-void-border'} rounded-2xl overflow-hidden cursor-pointer transition-all duration-300`}
-    >
-      <div className="relative h-44">
-        <div className={`absolute inset-0 bg-linear-to-br ${gradient} opacity-50 group-hover:opacity-70 transition-opacity duration-500`}></div>
-        {track.cover_url && (
-          <img src={track.cover_url} alt={track.title} className="w-full h-full object-cover opacity-40 group-hover:opacity-60 group-hover:scale-110 transition-all duration-700" />
-        )}
-        
-        <div className={`absolute inset-0 flex items-center justify-center transition-all duration-500 ${isCurrentPlaying ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
-          <div className="w-14 h-14 rounded-full bg-void-bg/60 backdrop-blur-md border border-white/10 flex items-center justify-center glow-crimson group-hover:scale-110 transition-transform">
-            {isCurrentPlaying ? <Pause size={24} className="text-crimson" /> : <Play size={24} fill="white" className="text-white ml-1" />}
+    <div className="glass group p-3 rounded-2xl border border-white/5 hover:border-crimson/20 transition-all duration-500 hover:-translate-y-1">
+      <div className="relative aspect-square rounded-xl overflow-hidden mb-4">
+        <img 
+          src={track.cover_url || "/lal-divane-avatar.png"} 
+          alt={track.title}
+          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+        />
+        <div className="absolute inset-0 bg-crimson/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+          <div className="w-12 h-12 rounded-full bg-moonlit/90 flex items-center justify-center text-void-bg scale-75 group-hover:scale-100 transition-transform duration-500 shadow-xl glow-crimson">
+            {isCurrentPlaying ? <Pause size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" className="ml-1" />}
           </div>
         </div>
-
-        <div className="absolute bottom-4 left-4 right-4 z-10">
-          <h3 className="text-lg font-bold mb-0.5 font-display text-white text-shadow-crimson truncate">{track.title}</h3>
-          <div className="flex items-center justify-between">
-            <p className="text-[10px] uppercase tracking-widest text-white/50">{track.artist}</p>
-            <p className="text-[10px] font-mono text-white/40">{formatTime(track.duration_seconds)}</p>
-          </div>
-        </div>
-        
-        <div className="absolute inset-x-0 bottom-0 h-2/3 bg-linear-to-t from-void-bg/90 to-transparent"></div>
-      </div>
-      
-      <div className="p-4 flex items-center justify-between bg-void-900/40">
-        <span className="text-[10px] uppercase tracking-tighter text-moonlit/30 flex items-center gap-1.5 font-bold">
-          <Users size={12} className="text-crimson/60" />
-          {listeners} Souls Listening
-        </span>
         <button 
-          onClick={(e) => { e.stopPropagation(); }} 
-          className="text-moonlit/20 hover:text-crimson transition-all hover:scale-125"
-        >
-          <Heart size={16} fill={isCurrentPlaying ? "currentColor" : "none"} />
-        </button>
+          onClick={(e) => { e.stopPropagation(); playTrack(track); }}
+          className="absolute inset-0 z-10" 
+        />
       </div>
-    </motion.div>
-  );
-}
-
-// Community Card
-function CommunityCard({ title, description, members, icon: Icon }: { title: string; description: string; members: string, icon: any }) {
-  return (
-    <motion.div 
-      whileHover={{ y: -5, borderColor: 'rgba(200, 16, 46, 0.4)' }}
-      className="glass rounded-2xl p-5 border border-void-border cursor-pointer transition-all group"
-    >
-      <div className="w-12 h-12 rounded-xl bg-crimson/10 flex items-center justify-center mb-4 group-hover:glow-crimson transition-all">
-        <Icon size={24} className="text-crimson" />
+      <div>
+        <h4 className="text-sm font-bold truncate text-moonlit group-hover:text-crimson transition-colors">{track.title}</h4>
+        <div className="mt-1 flex items-center justify-between">
+          <p className="text-[10px] text-moonlit/30 uppercase tracking-widest font-black">{track.artist}</p>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => onLoreClick(track)}
+              className="p-1.5 hover:bg-white/5 rounded-lg text-moonlit/20 hover:text-crimson transition-all"
+              title="Void Lore"
+            >
+              <Pause className="rotate-90" size={12} />
+            </button>
+            <button className="p-1.5 hover:bg-white/5 rounded-lg text-moonlit/20 hover:text-crimson transition-all">
+              <Heart size={12} />
+            </button>
+          </div>
+        </div>
       </div>
-      <h4 className="text-base font-bold mb-1 font-display text-moonlit group-hover:text-crimson transition-colors">{title}</h4>
-      <p className="text-xs text-moonlit/40 mb-4 line-clamp-2 leading-relaxed">{description}</p>
-      <div className="flex items-center justify-between pt-4 border-t border-void-border/30">
-        <span className="text-[10px] uppercase font-bold tracking-widest text-moonlit/20">{members}</span>
-        <ChevronRight size={14} className="text-moonlit/30 group-hover:translate-x-1 transition-transform" />
-      </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -167,23 +141,17 @@ export default function Dashboard() {
   const [searchQuery, setSearchQuery] = useState('');
   const [voidLore, setVoidLore] = useState<string | null>(null);
   const [isLoreLoading, setIsLoreLoading] = useState(false);
+  const [featuredContent, setFeaturedContent] = useState<any>(null);
 
   const fetchLore = async (track: Track) => {
     setIsLoreLoading(true);
+    setVoidLore(null);
     try {
-      const res = await fetch('/api/lore', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          trackTitle: track.title, 
-          artist: track.artist,
-          type: 'track'
-        })
-      });
+      const res = await fetch('/api/lore?track=' + encodeURIComponent(track.title));
       const data = await res.json();
       setVoidLore(data.lore);
     } catch (err) {
-      console.error('Lore failure', err);
+      console.error("Failed to hear the void", err);
     } finally {
       setIsLoreLoading(false);
     }
@@ -192,12 +160,14 @@ export default function Dashboard() {
   useEffect(() => {
     async function loadData() {
       try {
-        const [fetchedTracks, fetchedCommunities] = await Promise.all([
+        const [fetchedTracks, fetchedCommunities, featured] = await Promise.all([
           apiGetTracks(),
-          apiGetCommunities()
+          apiGetCommunities(),
+          apiGetFeaturedContent()
         ]);
         setTracks(fetchedTracks);
         setCommunities(fetchedCommunities);
+        setFeaturedContent(featured);
       } catch (err) {
         console.error("Failed to load feed data", err);
       } finally {
@@ -207,30 +177,27 @@ export default function Dashboard() {
     loadData();
   }, []);
 
-  const filteredTracks = tracks.filter(t => 
-    t.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    t.artist.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-  
-  const filteredCommunities = communities.filter(c => 
-    c.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    c.description?.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredTracks = tracks.filter(track => 
+    track.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    track.artist.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  useEffect(() => {
-    if (filteredTracks.length > 0 && !voidLore && !isLoreLoading) {
-      fetchLore(filteredTracks[0]);
-    }
-  }, [filteredTracks, voidLore, isLoreLoading]);
+  const filteredCommunities = communities.filter(c => 
+    c.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   if (isLoading) {
     return (
-      <div className="flex-1 overflow-y-auto scroll-smooth h-full flex items-center justify-center bg-void-bg">
-        <div className="w-12 h-12 rounded-full border-4 border-crimson/20 border-t-crimson animate-spin"></div>
+      <div className="flex-1 flex items-center justify-center bg-void-bg overflow-hidden h-full">
+        <div className="relative">
+          <div className="w-16 h-16 border-t-2 border-r-2 border-crimson rounded-full animate-spin shadow-2xl shadow-crimson/50" />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-2 h-2 bg-crimson rounded-full animate-ping" />
+          </div>
+        </div>
       </div>
     );
   }
-
 
   return (
     <div className="flex-1 overflow-y-auto scroll-smooth h-full custom-scrollbar">
@@ -248,83 +215,88 @@ export default function Dashboard() {
           </div>
           <div className="flex items-center gap-4">
             <div className="w-8 h-8 rounded-full bg-crimson/10 flex items-center justify-center cursor-pointer hover:bg-crimson/20 transition-colors">
-              <div className="w-2 h-2 rounded-full bg-crimson animate-pulse" />
+              <Play size={14} className="text-crimson ml-0.5" />
+            </div>
+            <div className="w-8 h-8 rounded-full bg-white/5 border border-white/5 flex items-center justify-center cursor-pointer hover:bg-white/10 transition-colors">
+              <Users size={14} className="text-moonlit/40" />
             </div>
           </div>
         </div>
       </div>
 
       <div className="max-w-5xl mx-auto px-8 py-10 space-y-12 pb-32">
-        {filteredTracks.length > 0 && <HeroBanner track={filteredTracks[0]} />}
+        {featuredContent ? (
+          <HeroBanner track={featuredContent.data} type={featuredContent.type} />
+        ) : filteredTracks.length > 0 ? (
+          <HeroBanner track={filteredTracks[0]} />
+        ) : null}
 
         {/* Void Whispers (AI Lore) */}
         {(voidLore || isLoreLoading) && (
-          <motion.div 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="relative p-6 rounded-3xl bg-crimson/5 border border-crimson/10 overflow-hidden group"
-          >
-            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-              <Users size={40} className="text-crimson" />
-            </div>
-            <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-crimson mb-3 flex items-center gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-crimson animate-pulse" />
-              Void Whispers
-            </h4>
-            {isLoreLoading ? (
-              <div className="flex items-center gap-3 text-moonlit/20 italic text-sm py-2">
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Channeling the abyss...
+          <AnimatePresence mode="wait">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="glass p-8 rounded-[2.5rem] border border-crimson/20 bg-gradient-to-br from-crimson/5 via-void-bg/80 to-void-bg relative overflow-hidden"
+            >
+              <div className="absolute top-0 right-0 p-2">
+                <button onClick={() => setVoidLore(null)} className="p-2 hover:bg-white/5 rounded-full text-moonlit/20 hover:text-crimson transition-colors">
+                  <Heart size={16} className="rotate-45" />
+                </button>
               </div>
-            ) : (
-              <p className="text-sm md:text-base text-moonlit/70 leading-relaxed font-serif italic max-w-2xl">
-                "{voidLore}"
-              </p>
-            )}
-            <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-crimson/5 rounded-full blur-3xl" />
-          </motion.div>
+              <div className="flex items-start gap-6 relative z-10">
+                <div className="w-12 h-12 rounded-2xl bg-crimson flex items-center justify-center flex-shrink-0 animate-pulse-slow shadow-lg glow-crimson">
+                  <Pause className="text-white rotate-90" size={24} />
+                </div>
+                <div>
+                  <h3 className="text-xs font-black uppercase tracking-[0.4em] text-crimson mb-4">Void Whispers</h3>
+                  {isLoreLoading ? (
+                    <div className="flex items-center gap-3 text-moonlit/40 italic">
+                      <Loader2 className="animate-spin text-crimson" size={16} />
+                      Translating the echoes...
+                    </div>
+                  ) : (
+                    <p className="text-sm md:text-base text-moonlit/70 leading-relaxed font-light first-letter:text-3xl first-letter:text-crimson first-letter:font-black first-letter:mr-1">
+                      {voidLore}
+                    </p>
+                  )}
+                </div>
+              </div>
+              <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-crimson/5 rounded-full blur-3xl" />
+            </motion.div>
+          </AnimatePresence>
         )}
 
-        {filteredTracks.length > 0 && (
-          <Section 
-            title={searchQuery ? "Matches from the Abyss" : "Echos of the Void"} 
-            href="/dashboard/tracks"
-            delay={0.1}
-          >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {filteredTracks.slice(1, 5).map((track, i) => (
-                <TrackCard
-                  key={track.id}
-                  track={track}
-                  listeners={(track as any).play_count?.toLocaleString() || "1,205"}
-                  gradient={i % 2 === 0 ? "from-crimson/40 via-blood/30 to-void-bg" : "from-accent-purple/30 via-void-700 to-crimson/20"}
-                />
-              ))}
-            </div>
-          </Section>
-        )}
-
-        {filteredCommunities.length > 0 && (
-          <Section title="Sanctuary Spaces" href="/dashboard/community" delay={0.2}>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {filteredCommunities.map((c) => (
-                <CommunityCard
-                  key={c.id}
-                  icon={Users}
-                  title={c.name}
-                  description={c.description}
-                  members={`${c.member_count?.toLocaleString() || 0} SOULS`}
-                />
-              ))}
-            </div>
-          </Section>
-        )}
-
-        {filteredTracks.length === 0 && filteredCommunities.length === 0 && (
-          <div className="py-20 text-center opacity-30 italic font-display text-xl">
-            The abyss is silent... no matches found.
+        <Section title="Echoes of the Void" href="/dashboard/tracks">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+            {filteredTracks.map(track => (
+              <TrackCard key={track.id} track={track} onLoreClick={fetchLore} />
+            ))}
           </div>
-        )}
+        </Section>
+
+        <Section title="Sanctuaries" href="/dashboard/community">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {filteredCommunities.map(c => (
+              <Link key={c.id} href={`/dashboard/community/${c.slug}`} className="glass group p-6 rounded-3xl border border-white/5 flex items-center gap-6 hover:border-crimson/20 transition-all duration-500 overflow-hidden relative">
+                <div className="absolute inset-0 bg-crimson/5 translate-x-full group-hover:translate-x-0 transition-transform duration-700" />
+                <div className="w-14 h-14 rounded-2xl bg-crimson/10 flex items-center justify-center flex-shrink-0 group-hover:bg-crimson group-hover:text-white transition-all duration-500 shadow-xl relative z-10">
+                  <Users size={24} />
+                </div>
+                <div className="relative z-10">
+                  <h4 className="font-bold text-moonlit group-hover:text-white transition-colors uppercase tracking-widest text-sm">{c.name}</h4>
+                  <p className="text-xs text-moonlit/30 mt-1 uppercase tracking-widest font-black leading-tight">/{c.slug} • {c.member_count} Members</p>
+                </div>
+                <div className="ml-auto relative z-10">
+                  <div className="w-8 h-8 rounded-full border border-white/5 flex items-center justify-center text-moonlit/20 group-hover:text-crimson group-hover:border-crimson/20 transition-all">
+                    <ChevronRight size={16} />
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </Section>
       </div>
     </div>
   );
