@@ -46,8 +46,6 @@ export async function apiLikeTrack(id: number) {
   if (existing) {
     // Delete like
     await supabase.from('favorites').delete().eq('user_id', user.id).eq('track_id', id);
-    // Note: In Supabase, track like_count is best handled by a database function or trigger, 
-    // or recalculated on the fly. We'll assume a trigger handles it or we don't strictly need a counter column.
     return { liked: false };
   } else {
     // Add like
@@ -57,7 +55,6 @@ export async function apiLikeTrack(id: number) {
 }
 
 export async function apiPlayTrack(id: number) {
-  // Call an RPC or update table. We'll just call an RPC if created, or insert listening_activity directly.
   const { data: { user } } = await supabase.auth.getUser();
   
   if (user) {
@@ -142,6 +139,24 @@ export async function apiGetCommunities() {
   return data || [];
 }
 
+export async function apiCreateCommunity(community: { name: string; slug: string; description: string; cover_url?: string }) {
+  const { data, error } = await supabase.from('communities').insert([community]).select().maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+export async function apiUpdateCommunity(id: number, community: Partial<{ name: string; slug: string; description: string; cover_url: string }>) {
+  const { data, error } = await supabase.from('communities').update(community).eq('id', id).select().maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+export async function apiDeleteCommunity(id: number) {
+  const { error } = await supabase.from('communities').delete().eq('id', id);
+  if (error) throw error;
+  return { success: true };
+}
+
 export async function apiGetCommunity(slug: string) {
   const { data, error } = await supabase
     .from('communities')
@@ -175,6 +190,22 @@ export async function apiCreatePost(communityId: number, content: string) {
     
   if (error) throw error;
   return data;
+}
+
+export async function apiAdminDeletePost(postId: number) {
+  const { error } = await supabase.from('posts').delete().eq('id', postId);
+  if (error) throw error;
+  return { success: true };
+}
+
+export async function apiGetAllPosts() {
+  const { data, error } = await supabase
+    .from('posts')
+    .select('*, profiles(username, display_name), communities(name)')
+    .order('created_at', { ascending: false })
+    .limit(100);
+  if (error) throw error;
+  return data || [];
 }
 
 // ═══════════ ALBUMS ═══════════
